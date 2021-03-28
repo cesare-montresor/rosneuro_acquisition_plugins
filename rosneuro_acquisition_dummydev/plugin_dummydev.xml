@@ -1,0 +1,5 @@
+<library path="lib/librosneuro_acquisition_dummydev">
+  <class type="rosneuro::DummyDevice" base_class_type="rosneuro::Device">
+    <description>This is the ROSNeuro Acquisition DUMMYDEV plugin.</description>
+  </class>
+</library>
