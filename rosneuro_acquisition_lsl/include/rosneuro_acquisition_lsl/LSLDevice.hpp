@@ -8,6 +8,7 @@
 #include <regex>
 #include <limits>
 #include <lsl_cpp.h>
+#include <ros/ros.h>
 #include <pluginlib/class_list_macros.h>
 #include <rosneuro_data/NeuroData.hpp>
 #include <rosneuro_acquisition/Device.hpp>
@@ -20,9 +21,10 @@ class LSLDevice : public Device {
 		LSLDevice(void);
 		LSLDevice(NeuroFrame* frame);
 		virtual ~LSLDevice(void);
+		bool Configure(NeuroFrame* frame, unsigned int framerate);
 
-		bool Setup(float framerate);
-		bool Open(const std::string& devname, int samplerate);
+		bool Setup(void);
+		bool Open(void);
 		bool Close(void);
 		bool Start(void);
 		bool Stop(void);
@@ -31,8 +33,6 @@ class LSLDevice : public Device {
 
 	private:
 		void destroy_lsl_structures(void);
-		std::vector<std::string> escape_device_string(const std::string& devarg, 
-													  const std::string& delimiter);
 
 	private:
 		lsl::stream_inlet* stream_;
@@ -40,6 +40,11 @@ class LSLDevice : public Device {
 
 		std::string		stream_name_;
 		std::string		stream_type_;
+
+		std::string		lsl_type_;
+		std::string		lsl_name_;
+		unsigned int	samplerate_;
+		unsigned int	framerate_;
 };
 
 

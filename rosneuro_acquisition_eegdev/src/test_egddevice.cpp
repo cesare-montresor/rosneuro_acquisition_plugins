@@ -1,3 +1,4 @@
+#include <ros/ros.h>
 #include <rosneuro_data/NeuroData.hpp>
 #include "rosneuro_acquisition_eegdev/EGDDevice.hpp"
 
@@ -9,12 +10,18 @@ int main(int argc, char** argv) {
 	rosneuro::NeuroFrame	frame;
 	rosneuro::EGDDevice		egddev(&frame);
 
+	ros::init(argc, argv, "test_egddevice");
+	
+	ros::param::set("devarg", argv[1]);
+	ros::param::set("samplerate", 512);
 
-	if(egddev.Open(argv[1], -1) == false)
+	egddev.Configure(&frame, 16);
+
+	if(egddev.Open() == false)
 		return -1;
 		
 	
-	if(egddev.Setup(16.0f) == false) {
+	if(egddev.Setup() == false) {
 		std::cerr<<"SETUP ERROR"<<std::endl;
 		return -1;
 	}

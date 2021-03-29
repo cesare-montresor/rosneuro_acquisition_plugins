@@ -15,12 +15,17 @@ DummyDevice::DummyDevice(void) : Device() {
 
 DummyDevice::~DummyDevice(void) {}
 
-bool DummyDevice::Setup(float framerate) {
+bool DummyDevice::Configure(NeuroFrame* frame, unsigned int framerate) {
+	printf("[%s] - Configuration done\n", this->name_.c_str());
+	return true;
+}
+
+bool DummyDevice::Setup(void) {
 	printf("[%s] - Setup done\n", this->name_.c_str());
 	return true;
 }
 
-bool DummyDevice::Open(const std::string& devname, int samplerate) {
+bool DummyDevice::Open(void) {
 	printf("[%s] - Device open\n", this->name_.c_str());
 	return true;
 }

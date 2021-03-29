@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(rosneuro_acquisition_dummydev)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(ROSNEURO_ACQUISITION_MIN_VERSION "1.0.0")
 
 find_package(catkin REQUIRED COMPONENTS 
 			 roscpp 
@@ -9,7 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
 			 pluginlib
 			 rosneuro_data
 			 rosneuro_msgs)
-find_package(rosneuro_acquisition 1.0.0 REQUIRED)
+find_package(rosneuro_acquisition ${ROSNEURO_ACQUISITION_MIN_VERSION} REQUIRED)
 
 find_package(PkgConfig)
 

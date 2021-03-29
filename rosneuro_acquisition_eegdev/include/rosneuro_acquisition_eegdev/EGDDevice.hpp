@@ -6,6 +6,7 @@
 #include <iostream>
 #include <cstring>
 #include <eegdev.h>
+#include <ros/ros.h>
 #include <pluginlib/class_list_macros.h>
 #include <rosneuro_data/NeuroData.hpp>
 #include <rosneuro_acquisition/Device.hpp>
@@ -40,13 +41,15 @@ class EGDDevice : public Device {
 		 */
 		virtual ~EGDDevice(void);
 
+		bool Configure(NeuroFrame* frame, unsigned int framerate);
+
 		/*! \brief      Set up the device
 		 *
 		 * \param      framerate  The framerate of data acquisition [Hz]
 		 *
 		 * \return     True if the set up is correctly performed, false otherwise
 		 */
-		bool Setup(float framerate);
+		bool Setup(void);
 
 		/*! \brief      Open the device
 		 *
@@ -55,7 +58,7 @@ class EGDDevice : public Device {
 		 *
 		 * \return     True if the device is correctly opened, false otherwise
 		 */
-		bool Open(const std::string& devname, int samplerate);
+		bool Open(void);
 
 		/*! \brief      Close the device
 		 *
@@ -108,7 +111,7 @@ class EGDDevice : public Device {
 		 *
 		 * \return     True if neuro data format is correctly set up, false otherwise
 		 */
-		bool setup_neuro_data(float framerate);
+		bool setup_neuro_data(void);
 
 		/*! \brief      { function_description }
 		 *
@@ -133,6 +136,11 @@ class EGDDevice : public Device {
 		struct  eegdev*	egddev_;
 		struct	grpconf* grp_;
 		size_t* strides_;
+
+		std::string		devarg_;
+		std::string		devext_;
+		unsigned int	samplerate_;
+		unsigned int	framerate_;
 };
 
 

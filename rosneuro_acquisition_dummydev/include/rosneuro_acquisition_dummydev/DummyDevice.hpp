@@ -43,7 +43,9 @@ class DummyDevice : public Device {
 		 *
 		 * \return     True if the set up is correctly performed, false otherwise
 		 */
-		bool Setup(float framerate);
+		bool Setup(void);
+
+		bool Configure(NeuroFrame* frame, unsigned int framerate);
 
 		/*! \brief      Open the device
 		 *
@@ -52,7 +54,7 @@ class DummyDevice : public Device {
 		 *
 		 * \return     True if the device is correctly opened, false otherwise
 		 */
-		bool Open(const std::string& devname, int samplerate);
+		bool Open(void);
 
 		/*! \brief      Close the device
 		 *

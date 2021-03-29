@@ -28,35 +28,42 @@ LSLDevice::~LSLDevice(void) {
 	this->destroy_lsl_structures();
 }
 
-bool LSLDevice::Open(const std::string& devarg, int samplerate) {
+bool LSLDevice::Configure(NeuroFrame* frame, unsigned int framerate) {
 
-	std::vector<lsl::stream_info> results;
-	std::vector<std::string> devparams;
+	// Initialize the frame
+	this->frame_	 = frame;
+	this->framerate_ = framerate;
 
-	// Escaping devarg string
-	devparams = this->escape_device_string(devarg, "\\|");
+	// Getting mandatory parameters from the server
+	if(ros::param::get("~stream_type", this->stream_type_) == false) {
+		ROS_ERROR("Missing mandatory 'stream_type' parameter in the server.");
+		return false;
+	}
 	
-	if(devparams.size() != 3) {
-		std::cout<<"[Error] - devarg must be in the format 'lsl|TYPE|NAME' of the stream"<<std::endl;
+	// Getting mandatory parameters from the server
+	if(ros::param::get("~stream_name", this->stream_name_) == false) {
+		ROS_ERROR("Missing mandatory 'stream_name' parameter in the server.");
 		return false;
 	}
 
-	// Associating type and name of the stream
-	this->stream_type_ = devparams[1];
-	this->stream_name_ = devparams[2];
+	return true;
+}
+
+bool LSLDevice::Open(void) {
+
+	std::vector<lsl::stream_info> results;
 
 	// Resolving the stream (with name) and checking the type
 	results = lsl::resolve_stream("name", this->stream_name_, 1, 1);
 
+
 	if (results.empty()) {
-		std::cerr<<"[Error] - Stream with name '"<< this->stream_name_
-				 <<"' not found in the current stream"<< std::endl;
+		ROS_ERROR("Stream with name '%s' not found in the current streams", this->stream_name_.c_str());
 		return false;
 	}
 
 	if(this->stream_type_.compare(results[0].type()) != 0) {
-		std::cerr<<"[Error] - Stream with type '"<<this->stream_type_
-				 <<"' not found in the current stream"<<std::endl;
+		ROS_ERROR("Stream with type '%s' not found in the current streams", this->stream_type_.c_str());
 		return false;
 	}
 
@@ -67,23 +74,23 @@ bool LSLDevice::Open(const std::string& devarg, int samplerate) {
 	return true;
 }
 
-bool LSLDevice::Setup(float framerate) {
+bool LSLDevice::Setup(void) {
 	size_t ns;
 	size_t neeg, nexg, ntri;
 	unsigned int sampling_rate;
 	NeuroDataInfo *ieeg, *iexg, *itri;
 
 	// Getting sampling rate from the stream
-	sampling_rate = this->info_->nominal_srate();
-	this->frame_->sr = sampling_rate;
+	this->samplerate_ = (unsigned int)this->info_->nominal_srate();
+	this->frame_->sr = this->samplerate_;
 
 	if(this->info_->nominal_srate() == lsl::IRREGULAR_RATE) {
-		std::cerr<<"[Error] - LSL device does not support irregular rate data stream"<<std::endl;
+		ROS_ERROR("LSL plugin does not support irregular rate data stream");
 		return false;
 	}
 
 	// Getting number of samples in the frame
-	ns = (size_t)(float)sampling_rate/framerate;
+	ns = (size_t)(this->samplerate_/this->framerate_);
 
 	// Getting number of channels from the stream
 	neeg = this->info_->channel_count();
@@ -106,6 +113,8 @@ bool LSLDevice::Setup(float framerate) {
 	this->frame_->eeg.info()->labels.clear();
 	for (auto i = 0; i<neeg; i++)
 		this->frame_->eeg.info()->labels.push_back(std::string("eeg:"+std::to_string(i)));
+	
+	ROS_INFO("'%s' device correctly configured with samplerate=%d Hz", this->GetName().c_str(), this->samplerate_);
 
 
 	return true;
@@ -117,8 +126,7 @@ bool LSLDevice::Start(void) {
 	try {
 		this->stream_->open_stream(1);
 	} catch (const std::runtime_error& e) {
-		std::cerr<<"[Error] - Cannot start the device '" << this->GetName() <<"': "
-				 << e.what() << std::endl;
+		ROS_ERROR("Cannot start the device '%s': %s", this->GetName().c_str(), e.what());
 		return false;
 	}
 	return true;
@@ -158,7 +166,7 @@ size_t LSLDevice::Get(void) {
 	size = this->stream_->pull_chunk_multiplexed(this->frame_->eeg.data(), nullptr, ns, 0, 1);
 
 	if (size != ns) {
-		std::cerr<<"[Error] - Corrupted data reading: unexpected chunk size: "<< size << std::endl;
+		ROS_ERROR("Corrupted data reading: unexpected chunk size: %zu", size);
 	}
 
 	return size;
@@ -182,13 +190,7 @@ void LSLDevice::destroy_lsl_structures(void) {
 	this->info_ = nullptr;
 }
 
-std::vector<std::string> LSLDevice::escape_device_string(const std::string& devarg, const std::string& delimiter) {
-	std::regex regexz(delimiter);
-    std::vector<std::string> list(std::sregex_token_iterator(devarg.begin(), devarg.end(), regexz, -1),
-                                  std::sregex_token_iterator());
 
-	return list;
-}
 
 }
 

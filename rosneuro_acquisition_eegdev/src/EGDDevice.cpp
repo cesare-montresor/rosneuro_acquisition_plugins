@@ -25,65 +25,90 @@ EGDDevice::~EGDDevice(void) {
 	this->destroy_egd_structures();
 }
 
-bool EGDDevice::Setup(float framerate) {
+bool EGDDevice::Configure(NeuroFrame* frame, unsigned int framerate) {
+
+	int samplerate;
+
+	// Initialize the frame
+	this->frame_	 = frame;
+	this->framerate_ = framerate;
+
+	// Getting mandatory parameters from the server
+	if(ros::param::get("~devarg", this->devarg_) == false) {
+		ROS_ERROR("Missing 'devarg' in the server. 'devarg' is a mandatory parameter");
+		return false;
+	}
+
+	// Getting optional parameters from the server
+	ros::param::param<std::string>("~devext", this->devext_, "");
+	ros::param::param<int>("~samplerate", samplerate, 0);
+	this->samplerate_ = (unsigned int)samplerate;
+
+	return true;
+}
+
+bool EGDDevice::Setup(void) {
 
 	
 	// Setup structures
 	if(this->setup_dev_capabilities() == false) {
-		std::cerr<<"[Error] - Cannot setup capabilities"<<std::endl; 
+		ROS_ERROR("Cannot setup device capabilities"); 
 		return false;
 	}
 	
 	
-	if(this->setup_neuro_data(framerate) == false) {
-		std::cerr<<"[Error] - Cannot setup data"<<std::endl; 
+	if(this->setup_neuro_data() == false) {
+		ROS_ERROR("Cannot setup data"); 
 		return false;
 	}
 	
 	if(this->setup_egd_structures() == false) {
-		std::cerr<<"[Error] - Cannot setup group"<<std::endl; 
+		ROS_ERROR("Cannot setup data structures"); 
 		return false;
 	}
 
 	// Setup egd device
 	if(egd_acq_setup(this->egddev_, EGD_DATA_GROUPS, this->strides_, EGD_DATA_GROUPS, this->grp_) == -1) {
-		std::cerr<<"Cannot setup the device: " << std::strerror(errno)<<std::endl;
+		ROS_ERROR("Cannot setup the device");
 		return false;
 	}
 	
+	ROS_INFO("'%s' device correctly configured with samplerate=%d Hz", this->GetName().c_str(), this->samplerate_);
 	
 	return true;
 }
 
-bool EGDDevice::Open(const std::string& devname, int samplerate) {
+bool EGDDevice::Open() {
 
 	std::string devnamearg;
 	bool isfile = false;
 
-	if(devname.find(".bdf") != std::string::npos) {
+	if(this->devarg_.find(".bdf") != std::string::npos) {
 		devnamearg.assign("datafile|path|");
 		isfile = true;
-	} else if(devname.find(".gdf") != std::string::npos) {
+	} else if(this->devarg_.find(".gdf") != std::string::npos) {
 		devnamearg.assign("datafile|path|");
 		isfile = true;
 	}
-	devnamearg.append(devname);
+	devnamearg.append(this->devarg_);
 
-	if(isfile == false && samplerate > 0) {
-		if(devname.compare("gtec") == 0) {
-			devnamearg += "|samplerate|" + std::to_string(samplerate);
-		} else if(devname.compare("eego") == 0) {
-			devnamearg += "|SR|" + std::to_string(samplerate);
+	if(isfile == false & this->samplerate_ > 0) {
+		if(this->devarg_.compare("gtec") == 0) {
+			devnamearg += "|samplerate|" + std::to_string(this->samplerate_);
+		} else if(this->devarg_.compare("eego") == 0) {
+			devnamearg += "|SR|" + std::to_string(this->samplerate_);
 		}
 	}
-
-	//this->name_ = devname;
+	
+	devnamearg += this->devext_;
 
 	if(!(this->egddev_ = egd_open(devnamearg.c_str()))) {
-		std::cerr<<"[Error] - Cannot open the device '"<< this->GetName() <<"': "
-				 << std::strerror(errno) <<std::endl;
+		ROS_ERROR("Cannot open the '%s' device with arg=%s and samplerate=%d Hz", 
+				  this->GetName().c_str(), devnamearg.c_str(), this->samplerate_);
 		return false;
 	}
+	ROS_INFO("'%s' device correctly opened with arg=%s", 
+			 this->GetName().c_str(), devnamearg.c_str());
 		
 	return true;
 }
@@ -189,20 +214,19 @@ bool EGDDevice::setup_dev_capabilities(void) {
 	return true;
 }
 
-bool EGDDevice::setup_neuro_data(float framerate) {
+bool EGDDevice::setup_neuro_data(void) {
 
 	size_t ns;
 	size_t neeg, nexg, ntri;
-	unsigned int sampling_rate;
 	NeuroDataInfo *ieeg, *iexg, *itri;
 
 	// Getting sampling rate and number of samples
-	if(egd_get_cap(this->egddev_, EGD_CAP_FS, &sampling_rate) == -1) {
+	if(egd_get_cap(this->egddev_, EGD_CAP_FS, &this->samplerate_) == -1) {
 		std::cerr<<"[Error] - Cannot get device sampling rate: "<<strerror(errno)<<std::endl;
 		return false;
 	}
-	ns = (size_t)(float)sampling_rate/framerate;
-	this->frame_->sr = sampling_rate;
+	ns = (size_t)(this->samplerate_/this->framerate_);
+	this->frame_->sr = this->samplerate_;
 
 	// Getting EEG number of channels
 	if( (neeg = egd_get_numch(this->egddev_, EGD_EEG)) == -1) {
