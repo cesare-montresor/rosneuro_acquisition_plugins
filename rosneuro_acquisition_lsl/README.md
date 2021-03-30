@@ -17,7 +17,7 @@ To launch the rosneuro_acquisition with the LSL plugin, first it is required to 
 ## Installing *liblsl*
 The LSL library can be installed following the official [instructions](https://github.com/sccn/labstreaminglayer). Please, notice that the required version is 1.13.0. 
 
-**Trick** Other version may work. However, starting from version 1.14.0, the liblsl library changed name (from liblsl64.so to libslsl.so). To make it work with the rosneuro LSL plugin, create a symbolic link to the new library, for example:
+**Trick** Other version may work. However, starting from version 1.14.0, the liblsl library changed name (from `liblsl64.so` to `libslsl.so`). To make it work with the rosneuro LSL plugin, create a symbolic link to the new library, for example:
 ```bash
 sudo ln -s /usr/lib/liblsl.so /usr/lib/liblsl64.so
 ```
