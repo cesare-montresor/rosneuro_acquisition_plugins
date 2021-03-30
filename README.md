@@ -1,4 +1,4 @@
 # Official ROSNeuro acquistion plugins
 The package provides official plugins for rosneuro_acquisition. Currently, the available plugins are for:
-- [eegdev](/rosneuro_acquisition_eegdev/README.md)
-- [lsl](/rosneuro_acquisition_lsl/README.md)
+- [eegdev library](/rosneuro_acquisition_eegdev/)
+- [LabStreaming Layer (LSL)](/rosneuro_acquisition_lsl/)
