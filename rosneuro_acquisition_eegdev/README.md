@@ -44,10 +44,11 @@ The plugin requires the installation of **libeegdev** and **libxdffileio**. The 
 
 ### Package installation
 The debian packges are available here:
-- [libxdffileio](https://neuro.debian.net/pkgs/libxdffileio.html)
+- [libxdffileio](https://neuro.debian.net/pkgs/libxdffileio0.html)
 - [libxdffileio-dev](https://neuro.debian.net/pkgs/libxdffileio-dev.html)
-- [libeegdev](https://neuro.debian.net/pkgs/libeegdev.html)
+- [libeegdev](https://neuro.debian.net/pkgs/libeegdev0.html)
 - [libeegdev-dev](https://neuro.debian.net/pkgs/libeegdev-dev.html)
+- [eegdev-plugins-free](https://neuro.debian.net/pkgs/eegdev-plugins-free.html)
 
 Download the packages and run the command:
 
